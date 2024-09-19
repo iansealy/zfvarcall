@@ -36,6 +36,21 @@
                 }
             }
         },
+        "common_options": {
+            "title": "Common options",
+            "type": "object",
+            "fa_icon": "fas fa-user-cog",
+            "description": "Most common options used for the pipeline.",
+            "properties": {
+                "split_fastq": {
+                    "type": "integer",
+                    "minimum": 100000,
+                    "default": 10000000,
+                    "description": "Specify how many reads each split of a FASTQ file should contain.",
+                    "fa_icon": "fas fa-hand-scissors"
+                }
+            }
+        },
         "institutional_config_options": {
             "title": "Institutional config options",
             "type": "object",
@@ -212,6 +227,9 @@
     "allOf": [
         {
             "$ref": "#/$defs/input_output_options"
+        },
+        {
+            "$ref": "#/$defs/common_options"
         },
 
         {
