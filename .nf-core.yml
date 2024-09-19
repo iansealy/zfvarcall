@@ -1,44 +1,44 @@
 bump_version: null
 lint:
   files_exist:
-  - conf/igenomes.config
-  - assets/email_template.html
-  - assets/sendmail_template.txt
-  - assets/email_template.txt
-  - conf/igenomes.config
-  - assets/email_template.html
-  - assets/sendmail_template.txt
-  - assets/email_template.txt
-  - CODE_OF_CONDUCT.md
-  - assets/nf-core-zfvarcall_logo_light.png
-  - docs/images/nf-core-zfvarcall_logo_light.png
-  - docs/images/nf-core-zfvarcall_logo_dark.png
-  - .github/ISSUE_TEMPLATE/config.yml
-  - .github/workflows/awstest.yml
-  - .github/workflows/awsfulltest.yml
+    - conf/igenomes.config
+    - assets/email_template.html
+    - assets/sendmail_template.txt
+    - assets/email_template.txt
+    - conf/igenomes.config
+    - assets/email_template.html
+    - assets/sendmail_template.txt
+    - assets/email_template.txt
+    - CODE_OF_CONDUCT.md
+    - assets/nf-core-zfvarcall_logo_light.png
+    - docs/images/nf-core-zfvarcall_logo_light.png
+    - docs/images/nf-core-zfvarcall_logo_dark.png
+    - .github/ISSUE_TEMPLATE/config.yml
+    - .github/workflows/awstest.yml
+    - .github/workflows/awsfulltest.yml
   files_unchanged:
-  - .github/CONTRIBUTING.md
-  - .prettierignore
-  - .prettierignore
-  - .github/CONTRIBUTING.md
-  - .prettierignore
-  - .prettierignore
-  - CODE_OF_CONDUCT.md
-  - assets/nf-core-zfvarcall_logo_light.png
-  - docs/images/nf-core-zfvarcall_logo_light.png
-  - docs/images/nf-core-zfvarcall_logo_dark.png
-  - .github/ISSUE_TEMPLATE/bug_report.yml
+    - .github/CONTRIBUTING.md
+    - .prettierignore
+    - .prettierignore
+    - .github/CONTRIBUTING.md
+    - .prettierignore
+    - .prettierignore
+    - CODE_OF_CONDUCT.md
+    - assets/nf-core-zfvarcall_logo_light.png
+    - docs/images/nf-core-zfvarcall_logo_light.png
+    - docs/images/nf-core-zfvarcall_logo_dark.png
+    - .github/ISSUE_TEMPLATE/bug_report.yml
   multiqc_config:
-  - report_comment
+    - report_comment
   nextflow_config:
-  - manifest.name
-  - manifest.homePage
-  - validation.help.beforeText
-  - validation.help.afterText
-  - validation.summary.beforeText
-  - validation.summary.afterText
+    - manifest.name
+    - manifest.homePage
+    - validation.help.beforeText
+    - validation.help.afterText
+    - validation.summary.beforeText
+    - validation.summary.afterText
   readme:
-  - nextflow_badge
+    - nextflow_badge
 nf_core_version: 3.0.0.dev0
 org_path: null
 repository_type: pipeline
@@ -51,13 +51,13 @@ template:
   org: iansealy
   outdir: zfvarcall
   skip_features:
-  - igenomes
-  - github_badges
-  - gitpod
-  - codespaces
-  - fastqc
-  - email
-  - adaptivecard
-  - seqera_platform
+    - igenomes
+    - github_badges
+    - gitpod
+    - codespaces
+    - fastqc
+    - email
+    - adaptivecard
+    - seqera_platform
   version: 1.0.0dev
 update: null
