@@ -5,6 +5,7 @@
 */
 
 include { FASTP                  } from '../modules/nf-core/fastp/main'
+include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -36,9 +37,19 @@ workflow ZFVARCALL {
         false, // no need to keep failed reads
         false  // no need to merge reads
     )
+    ch_reads_trimmed = FASTP.out.reads
     ch_multiqc_files = ch_multiqc_files.mix(FASTP.out.json.collect{it[1]})
     ch_multiqc_files = ch_multiqc_files.mix(FASTP.out.html.collect{it[1]})
     ch_versions = ch_versions.mix(FASTP.out.versions)
+
+    //
+    // MODULE: FastQC
+    //
+    FASTQC (
+        ch_reads_trimmed
+    )
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
+    ch_versions = ch_versions.mix(FASTQC.out.versions)
 
     //
     // Collate and save software versions
