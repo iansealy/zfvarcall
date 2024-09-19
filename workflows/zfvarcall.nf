@@ -27,7 +27,7 @@ workflow ZFVARCALL {
     ch_multiqc_files = Channel.empty()
 
     //
-    // MODULE: MultiQC
+    // MODULE: fastp
     //
     FASTP (
         ch_samplesheet,
