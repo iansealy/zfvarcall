@@ -46,7 +46,7 @@ workflow PIPELINE_INITIALISATION {
         workflow.profile.tokenize(',').intersect(['conda', 'mamba']).size() >= 1
     )
 
-    
+
     //
     // Validate parameters and generate parameter summary to stdout
     //
@@ -55,7 +55,7 @@ workflow PIPELINE_INITIALISATION {
         validate_params,
         null
     )
-    
+
 
     //
     // Check config provided to the pipeline
@@ -155,7 +155,7 @@ def toolCitationText() {
     // Uncomment function in methodsDescriptionText to render in MultiQC report
     def citation_text = [
             "Tools used in the workflow included:",
-            
+
             "MultiQC (Ewels et al. 2016)",
             "."
         ].join(' ').trim()
@@ -168,7 +168,7 @@ def toolBibliographyText() {
     // Can use ternary operators to dynamically construct based conditions, e.g. params["run_xyz"] ? "<li>Author (2023) Pub name, Journal, DOI</li>" : "",
     // Uncomment function in methodsDescriptionText to render in MultiQC report
     def reference_text = [
-            
+
             "<li>Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics , 32(19), 3047–3048. doi: /10.1093/bioinformatics/btw354</li>"
         ].join(' ').trim()
 
