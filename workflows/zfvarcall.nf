@@ -22,7 +22,12 @@ include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_zfva
 workflow ZFVARCALL {
 
     take:
-    ch_samplesheet // channel: samplesheet read in from --input
+    ch_samplesheet        // channel: samplesheet read in from --input
+    ch_fasta              // channel: [ val(meta), [ fasta ] ]
+    ch_fasta_fai          // channel: [ val(meta), [ fai ] ]
+    ch_fasta_dict         // channel: [ val(meta), [ dict ] ]
+    ch_bwa_index          // channel: [ val(meta), [ bwa ] ]
+
     main:
 
     ch_versions = Channel.empty()

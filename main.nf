@@ -13,7 +13,8 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { ZFVARCALL  } from './workflows/zfvarcall'
+include { ZFVARCALL               } from './workflows/zfvarcall'
+include { PREPARE_GENOME          } from './subworkflows/local/prepare_genome'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_zfvarcall_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_zfvarcall_pipeline'
 /*
@@ -33,10 +34,32 @@ workflow IANSEALY_ZFVARCALL {
     main:
 
     //
+    // SUBWORKFLOW: Prepare genome
+    //
+    PREPARE_GENOME (
+        params.fasta,
+        params.fasta_fai,
+        params.fasta_dict,
+        params.bwa_index
+    )
+
+    // Get indices from params or from preparing genome
+    fasta_fai   = params.fasta_fai  ? Channel.fromPath(params.fasta_fai).map{  it -> [ [id:'fai'],  it ] }.collect()
+                                    : PREPARE_GENOME.out.fasta_fai
+    fasta_dict  = params.fasta_dict ? Channel.fromPath(params.fasta_dict).map{ it -> [ [id:'dict'], it ] }.collect()
+                                    : PREPARE_GENOME.out.fasta_dict
+    bwa_index   = params.bwa_index  ? Channel.fromPath(params.bwa_index).map{  it -> [ [id:'bwa'],  it ] }.collect()
+                                    : PREPARE_GENOME.out.bwa_index
+
+    //
     // WORKFLOW: Run pipeline
     //
     ZFVARCALL (
-        samplesheet
+        samplesheet,
+        PREPARE_GENOME.out.fasta,
+        fasta_fai,
+        fasta_dict,
+        bwa_index
     )
     emit:
     multiqc_report = ZFVARCALL.out.multiqc_report // channel: /path/to/multiqc_report.html
