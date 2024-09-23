@@ -57,7 +57,7 @@
                     "format": "file-path",
                     "exists": true,
                     "mimetype": "text/plain",
-                    "pattern": "^\\S+\\.fn?a(sta).fai$",
+                    "pattern": "^\\S+\\.fn?a(sta)?.fai$",
                     "description": "Path to FASTA FAI genome index file.",
                     "help_text": "If this parameter is not specified then the index will be generated automatically.",
                     "fa_icon": "far fa-file-code"
