@@ -7,6 +7,7 @@
 include { FASTP                  } from '../modules/nf-core/fastp/main'
 include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { SEQKIT_SPLIT2          } from '../modules/nf-core/seqkit/split2/main'
+include { BWA_MEM                } from '../modules/nf-core/bwa/mem/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -63,7 +64,21 @@ workflow ZFVARCALL {
     SEQKIT_SPLIT2 (
         ch_reads_trimmed
     )
+    ch_reads_split = SEQKIT_SPLIT2.out.reads.transpose()
+        .map{ meta, read -> [meta + [split: get_split_num(read.getName())], read]}
+        .groupTuple()
     ch_versions = ch_versions.mix(SEQKIT_SPLIT2.out.versions)
+
+    //
+    // MODULE: BWA mem
+    //
+    BWA_MEM (
+        ch_reads_split,
+        ch_bwa_index,
+        ch_fasta,
+        true // Sort BAM file
+    )
+    ch_versions = ch_versions.mix(BWA_MEM.out.versions)
 
     //
     // Collate and save software versions
@@ -128,6 +143,14 @@ workflow ZFVARCALL {
     emit:multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
     versions       = ch_versions                 // channel: [ path(versions.yml) ]
 
+}
+
+// Helper functions
+
+// Extract split number from a read filename
+// e.g. Get "2" from "ERS01_1.fastp.part_002.fastq.gz"
+def get_split_num(String read) {
+    return (read =~ /(\d+)\.(fastq|fq)(\.gz)?$/)[0][1].toInteger()
 }
 
 /*
