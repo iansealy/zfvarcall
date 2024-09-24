@@ -13,6 +13,12 @@
                 "errorMessage": "Sample name must be provided and cannot contain spaces",
                 "meta": ["id"]
             },
+            "lane": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "Lane name must be provided and cannot contain spaces",
+                "meta": ["lane"]
+            },
             "fastq_1": {
                 "type": "string",
                 "format": "file-path",
@@ -28,6 +34,6 @@
                 "errorMessage": "FASTQ file for read 2 cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
             }
         },
-        "required": ["sample", "fastq_1"]
+        "required": ["sample", "lane", "fastq_1"]
     }
 }
