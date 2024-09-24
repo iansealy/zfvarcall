@@ -93,7 +93,7 @@ workflow ZFVARCALL {
         ch_fasta,
         ch_fasta_fai
     )
-    ch_versions = ch_versions.mix(BWA_MEM.out.versions)
+    ch_versions = ch_versions.mix(SAMTOOLS_MERGE.out.versions)
 
     //
     // MODULE: biobambam2 bamsormadup
