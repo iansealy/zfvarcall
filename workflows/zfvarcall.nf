@@ -8,6 +8,7 @@ include { FASTP                  } from '../modules/nf-core/fastp/main'
 include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { SEQKIT_SPLIT2          } from '../modules/nf-core/seqkit/split2/main'
 include { BWA_MEM                } from '../modules/nf-core/bwa/mem/main'
+include { SAMTOOLS_MERGE         } from '../modules/nf-core/samtools/merge/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -77,6 +78,19 @@ workflow ZFVARCALL {
         ch_bwa_index,
         ch_fasta,
         true // Sort BAM file
+    )
+    ch_versions = ch_versions.mix(BWA_MEM.out.versions)
+
+    //
+    // MODULE: Samtools merge
+    //
+    ch_bam_split = BWA_MEM.out.bam
+        .map { it[0].remove("split"); it }
+        .groupTuple()
+    SAMTOOLS_MERGE (
+        ch_bam_split,
+        ch_fasta,
+        ch_fasta_fai
     )
     ch_versions = ch_versions.mix(BWA_MEM.out.versions)
 
