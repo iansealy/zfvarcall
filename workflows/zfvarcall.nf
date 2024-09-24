@@ -8,7 +8,8 @@ include { FASTP                  } from '../modules/nf-core/fastp/main'
 include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { SEQKIT_SPLIT2          } from '../modules/nf-core/seqkit/split2/main'
 include { BWA_MEM                } from '../modules/nf-core/bwa/mem/main'
-include { SAMTOOLS_MERGE         } from '../modules/nf-core/samtools/merge/main'
+include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_SPLITS } from '../modules/nf-core/samtools/merge/main'
+include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_LANES  } from '../modules/nf-core/samtools/merge/main'
 include { BIOBAMBAM_BAMSORMADUP  } from '../modules/nf-core/biobambam/bamsormadup/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
@@ -83,27 +84,41 @@ workflow ZFVARCALL {
     ch_versions = ch_versions.mix(BWA_MEM.out.versions)
 
     //
-    // MODULE: Samtools merge
+    // MODULE: Samtools merge (splits)
     //
     ch_bam_split = BWA_MEM.out.bam
         .map { it[0].remove("split"); it }
         .groupTuple()
-    SAMTOOLS_MERGE (
+    SAMTOOLS_MERGE_SPLITS (
         ch_bam_split,
         ch_fasta,
         ch_fasta_fai
     )
-    ch_versions = ch_versions.mix(SAMTOOLS_MERGE.out.versions)
+    ch_versions = ch_versions.mix(SAMTOOLS_MERGE_SPLITS.out.versions)
 
     //
     // MODULE: biobambam2 bamsormadup
     //
     BIOBAMBAM_BAMSORMADUP (
-        SAMTOOLS_MERGE.out.bam,
+        SAMTOOLS_MERGE_SPLITS.out.bam,
         ch_fasta
     )
     ch_multiqc_files = ch_multiqc_files.mix(BIOBAMBAM_BAMSORMADUP.out.metrics.collect{it[1]})
     ch_versions = ch_versions.mix(BIOBAMBAM_BAMSORMADUP.out.versions)
+
+    //
+    // MODULE: Samtools merge (lanes)
+    //
+    ch_bam_lanes = BIOBAMBAM_BAMSORMADUP.out.bam
+        .map { it[0].remove("lane"); it[0].id = it[0].sample; it }
+        .groupTuple()
+    ch_bam_lanes.view()
+    SAMTOOLS_MERGE_LANES (
+        ch_bam_lanes,
+        ch_fasta,
+        ch_fasta_fai
+    )
+    ch_versions = ch_versions.mix(SAMTOOLS_MERGE_LANES.out.versions)
 
     //
     // Collate and save software versions
