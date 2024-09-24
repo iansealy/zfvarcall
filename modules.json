@@ -40,6 +40,11 @@
                         "git_sha": "763d4b5c05ffda3ac1ac969dc67f7458cfb2eb1d",
                         "installed_by": ["modules"]
                     },
+                    "samtools/merge": {
+                        "branch": "master",
+                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "installed_by": ["modules"]
+                    },
                     "seqkit/split2": {
                         "branch": "master",
                         "git_sha": "06c8865e36741e05ad32ef70ab3fac127486af48",
