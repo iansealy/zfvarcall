@@ -112,7 +112,6 @@ workflow ZFVARCALL {
     ch_bam_lanes = BIOBAMBAM_BAMSORMADUP.out.bam
         .map { it[0].remove("lane"); it[0].id = it[0].sample; it }
         .groupTuple()
-    ch_bam_lanes.view()
     SAMTOOLS_MERGE_LANES (
         ch_bam_lanes,
         ch_fasta,
