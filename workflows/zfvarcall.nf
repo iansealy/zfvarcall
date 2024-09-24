@@ -9,6 +9,7 @@ include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { SEQKIT_SPLIT2          } from '../modules/nf-core/seqkit/split2/main'
 include { BWA_MEM                } from '../modules/nf-core/bwa/mem/main'
 include { SAMTOOLS_MERGE         } from '../modules/nf-core/samtools/merge/main'
+include { BIOBAMBAM_BAMSORMADUP  } from '../modules/nf-core/biobambam/bamsormadup/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -93,6 +94,16 @@ workflow ZFVARCALL {
         ch_fasta_fai
     )
     ch_versions = ch_versions.mix(BWA_MEM.out.versions)
+
+    //
+    // MODULE: biobambam2 bamsormadup
+    //
+    BIOBAMBAM_BAMSORMADUP (
+        SAMTOOLS_MERGE.out.bam,
+        ch_fasta
+    )
+    ch_multiqc_files = ch_multiqc_files.mix(BIOBAMBAM_BAMSORMADUP.out.metrics.collect{it[1]})
+    ch_versions = ch_versions.mix(BIOBAMBAM_BAMSORMADUP.out.versions)
 
     //
     // Collate and save software versions
