@@ -11,6 +11,7 @@ include { BWA_MEM                } from '../modules/nf-core/bwa/mem/main'
 include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_SPLITS } from '../modules/nf-core/samtools/merge/main'
 include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_LANES  } from '../modules/nf-core/samtools/merge/main'
 include { BIOBAMBAM_BAMSORMADUP  } from '../modules/nf-core/biobambam/bamsormadup/main'
+include { SAMTOOLS_INDEX         } from '../modules/nf-core/samtools/index/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -118,6 +119,14 @@ workflow ZFVARCALL {
         ch_fasta_fai
     )
     ch_versions = ch_versions.mix(SAMTOOLS_MERGE_LANES.out.versions)
+
+    //
+    // MODULE: Samtools index
+    //
+    SAMTOOLS_INDEX (
+        SAMTOOLS_MERGE_LANES.out.bam
+    )
+    ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions)
 
     //
     // Collate and save software versions
