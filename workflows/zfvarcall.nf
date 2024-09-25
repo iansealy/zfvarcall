@@ -10,6 +10,7 @@ include { SEQKIT_SPLIT2          } from '../modules/nf-core/seqkit/split2/main'
 include { BWA_MEM                } from '../modules/nf-core/bwa/mem/main'
 include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_SPLITS } from '../modules/nf-core/samtools/merge/main'
 include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_LANES  } from '../modules/nf-core/samtools/merge/main'
+include { GATK4_ADDORREPLACEREADGROUPS            } from '../modules/nf-core/gatk4/addorreplacereadgroups/main'
 include { BIOBAMBAM_BAMSORMADUP  } from '../modules/nf-core/biobambam/bamsormadup/main'
 include { SAMTOOLS_INDEX         } from '../modules/nf-core/samtools/index/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
@@ -98,10 +99,20 @@ workflow ZFVARCALL {
     ch_versions = ch_versions.mix(SAMTOOLS_MERGE_SPLITS.out.versions)
 
     //
+    // MODULE: GATK AddOrReplaceReadGroups
+    //
+    GATK4_ADDORREPLACEREADGROUPS (
+        SAMTOOLS_MERGE_SPLITS.out.bam,
+        ch_fasta,
+        ch_fasta_fai
+    )
+    ch_versions = ch_versions.mix(GATK4_ADDORREPLACEREADGROUPS.out.versions)
+
+    //
     // MODULE: biobambam2 bamsormadup
     //
     BIOBAMBAM_BAMSORMADUP (
-        SAMTOOLS_MERGE_SPLITS.out.bam,
+        GATK4_ADDORREPLACEREADGROUPS.out.bam,
         ch_fasta
     )
     ch_multiqc_files = ch_multiqc_files.mix(BIOBAMBAM_BAMSORMADUP.out.metrics.collect{it[1]})
