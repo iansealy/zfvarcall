@@ -13,6 +13,7 @@ include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_LANES  } from '../modules/nf-core/sam
 include { GATK4_ADDORREPLACEREADGROUPS            } from '../modules/nf-core/gatk4/addorreplacereadgroups/main'
 include { BIOBAMBAM_BAMSORMADUP  } from '../modules/nf-core/biobambam/bamsormadup/main'
 include { SAMTOOLS_INDEX         } from '../modules/nf-core/samtools/index/main'
+include { GATK4_HAPLOTYPECALLER  } from '../modules/nf-core/gatk4/haplotypecaller/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -138,6 +139,22 @@ workflow ZFVARCALL {
         SAMTOOLS_MERGE_LANES.out.bam
     )
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions)
+
+    // TODO: Use intervals
+    //
+    // MODULE: GATK HaplotypeCaller
+    //
+    ch_bam_bai = SAMTOOLS_MERGE_LANES.out.bam.join(SAMTOOLS_INDEX.out.bai, failOnDuplicate: true, failOnMismatch: true)
+        .map{ meta, bam, bai -> [meta, bam, bai, [], []] }
+    GATK4_HAPLOTYPECALLER (
+        ch_bam_bai,
+        ch_fasta,
+        ch_fasta_fai,
+        ch_fasta_dict,
+        [[], []], // no need for dbSNP file
+        [[], []]  // no need for dbSNP index
+    )
+    ch_versions = ch_versions.mix(GATK4_HAPLOTYPECALLER.out.versions)
 
     //
     // Collate and save software versions
