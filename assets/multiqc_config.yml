@@ -22,3 +22,5 @@ module_order:
       name: "biobambam2 bamsormadup"
   - mosdepth:
       name: "mosdepth"
+  - samtools:
+      name: "Samtools flagstat"

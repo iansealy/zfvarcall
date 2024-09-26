@@ -14,6 +14,7 @@ include { GATK4_ADDORREPLACEREADGROUPS            } from '../modules/nf-core/gat
 include { BIOBAMBAM_BAMSORMADUP  } from '../modules/nf-core/biobambam/bamsormadup/main'
 include { SAMTOOLS_INDEX         } from '../modules/nf-core/samtools/index/main'
 include { MOSDEPTH               } from '../modules/nf-core/mosdepth/main'
+include { SAMTOOLS_FLAGSTAT      } from '../modules/nf-core/samtools/flagstat/main'
 include { GATK4_HAPLOTYPECALLER  } from '../modules/nf-core/gatk4/haplotypecaller/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
@@ -152,6 +153,17 @@ workflow ZFVARCALL {
     )
     ch_multiqc_files = ch_multiqc_files.mix(MOSDEPTH.out.global_txt.collect{it[1]})
     ch_versions = ch_versions.mix(MOSDEPTH.out.versions)
+
+    //
+    // MODULE: Samtools flagstat
+    //
+    ch_bam_bai_0 = SAMTOOLS_MERGE_LANES.out.bam.join(SAMTOOLS_INDEX.out.bai, failOnDuplicate: true, failOnMismatch: true)
+        .map{ meta, bam, bai -> [meta, bam, bai] }
+    SAMTOOLS_FLAGSTAT (
+        ch_bam_bai_0
+    )
+    ch_multiqc_files = ch_multiqc_files.mix(SAMTOOLS_FLAGSTAT.out.flagstat.collect{it[1]})
+    ch_versions = ch_versions.mix(SAMTOOLS_FLAGSTAT.out.versions)
 
     // TODO: Use intervals
     //
