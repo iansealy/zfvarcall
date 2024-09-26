@@ -12,3 +12,13 @@ report_section_order:
 export_plots: true
 
 disable_version_detection: true
+
+module_order:
+  - fastp:
+      name: "fastp"
+  - fastqc:
+      name: "FastQC"
+  - biobambam2:
+      name: "biobambam2 bamsormadup"
+  - mosdepth:
+      name: "mosdepth"
