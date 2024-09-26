@@ -24,3 +24,15 @@ module_order:
       name: "mosdepth"
   - samtools:
       name: "Samtools flagstat"
+
+table_columns_visible:
+  fastp: True
+  fastqc: True
+  biobambam2: True
+  mosdepth: True
+  samtools: True
+
+sample_names_replace_regex: True
+sample_names_replace:
+  "\\.metrics$": ""
+  module: biobambam2
