@@ -36,3 +36,8 @@ sample_names_replace_regex: True
 sample_names_replace:
   "\\.metrics$": ""
   module: biobambam2
+
+mosdepth_config:
+  exclude_contigs:
+    - "K*"
+    - "MT*"
