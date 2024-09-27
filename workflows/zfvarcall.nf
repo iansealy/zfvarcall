@@ -16,6 +16,7 @@ include { SAMTOOLS_INDEX         } from '../modules/nf-core/samtools/index/main'
 include { MOSDEPTH               } from '../modules/nf-core/mosdepth/main'
 include { SAMTOOLS_FLAGSTAT      } from '../modules/nf-core/samtools/flagstat/main'
 include { GATK4_HAPLOTYPECALLER  } from '../modules/nf-core/gatk4/haplotypecaller/main'
+include { FREEBAYES              } from '../modules/nf-core/freebayes/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -181,6 +182,22 @@ workflow ZFVARCALL {
         [[], []]  // no need for dbSNP index
     )
     ch_versions = ch_versions.mix(GATK4_HAPLOTYPECALLER.out.versions)
+
+    // TODO: Use intervals
+    //
+    // MODULE: freebayes
+    //
+    ch_bam_bai_3 = SAMTOOLS_MERGE_LANES.out.bam.join(SAMTOOLS_INDEX.out.bai, failOnDuplicate: true, failOnMismatch: true)
+        .map{ meta, bam, bai -> [meta, bam, bai, [], [], []] }
+    FREEBAYES (
+        ch_bam_bai_3,
+        ch_fasta,
+        ch_fasta_fai,
+        [[], []], // no need for samples file
+        [[], []], // no need for populations file
+        [[], []]  // no need for copy number map file
+    )
+    ch_versions = ch_versions.mix(FREEBAYES.out.versions)
 
     //
     // Collate and save software versions
