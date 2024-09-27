@@ -17,6 +17,7 @@ include { MOSDEPTH               } from '../modules/nf-core/mosdepth/main'
 include { SAMTOOLS_FLAGSTAT      } from '../modules/nf-core/samtools/flagstat/main'
 include { GATK4_HAPLOTYPECALLER  } from '../modules/nf-core/gatk4/haplotypecaller/main'
 include { FREEBAYES              } from '../modules/nf-core/freebayes/main'
+include { BCFTOOLS_MPILEUP       } from '../modules/nf-core/bcftools/mpileup/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -198,6 +199,19 @@ workflow ZFVARCALL {
         [[], []]  // no need for copy number map file
     )
     ch_versions = ch_versions.mix(FREEBAYES.out.versions)
+
+    // TODO: Use intervals
+    //
+    // MODULE: BCFtools mpileup
+    //
+    ch_bam_1 = SAMTOOLS_MERGE_LANES.out.bam.map{ meta, bam -> [meta, bam, []] }
+    BCFTOOLS_MPILEUP (
+        ch_bam_1,
+        ch_fasta,
+        false // no need to save mpileup
+    )
+    ch_multiqc_files = ch_multiqc_files.mix(BCFTOOLS_MPILEUP.out.stats.collect{it[1]})
+    ch_versions = ch_versions.mix(BCFTOOLS_MPILEUP.out.versions)
 
     //
     // Collate and save software versions
