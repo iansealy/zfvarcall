@@ -203,7 +203,6 @@ workflow ZFVARCALL {
         ch_fasta,
         false // no need to save mpileup
     )
-    ch_multiqc_files = ch_multiqc_files.mix(BCFTOOLS_MPILEUP.out.stats.collect{it[1]})
     ch_versions = ch_versions.mix(BCFTOOLS_MPILEUP.out.versions)
 
     //

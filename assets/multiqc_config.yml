@@ -24,8 +24,6 @@ module_order:
       name: "mosdepth"
   - samtools:
       name: "Samtools flagstat"
-  - bcftools:
-      name: "BCFtools mpileup"
 
 table_columns_visible:
   fastp: True
