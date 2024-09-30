@@ -168,7 +168,6 @@ workflow ZFVARCALL {
     ch_multiqc_files = ch_multiqc_files.mix(SAMTOOLS_FLAGSTAT.out.flagstat.collect{it[1]})
     ch_versions = ch_versions.mix(SAMTOOLS_FLAGSTAT.out.versions)
 
-    // TODO: Use intervals
     //
     // MODULE: GATK HaplotypeCaller
     //
@@ -184,7 +183,6 @@ workflow ZFVARCALL {
     )
     ch_versions = ch_versions.mix(GATK4_HAPLOTYPECALLER.out.versions)
 
-    // TODO: Use intervals
     //
     // SUBWORKFLOW: freebayes, VCF sort, index and stats
     //
@@ -196,7 +194,6 @@ workflow ZFVARCALL {
     )
     ch_versions = ch_versions.mix(BAM_FREEBAYES_SORT_INDEX_STATS.out.versions)
 
-    // TODO: Use intervals
     //
     // MODULE: BCFtools mpileup
     //
