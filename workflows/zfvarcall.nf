@@ -4,25 +4,25 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { FASTP                  } from '../modules/nf-core/fastp/main'
-include { FASTQC                 } from '../modules/nf-core/fastqc/main'
-include { SEQKIT_SPLIT2          } from '../modules/nf-core/seqkit/split2/main'
-include { BWA_MEM                } from '../modules/nf-core/bwa/mem/main'
+include { FASTP                          } from '../modules/nf-core/fastp/main'
+include { FASTQC                         } from '../modules/nf-core/fastqc/main'
+include { SEQKIT_SPLIT2                  } from '../modules/nf-core/seqkit/split2/main'
+include { BWA_MEM                        } from '../modules/nf-core/bwa/mem/main'
 include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_SPLITS } from '../modules/nf-core/samtools/merge/main'
 include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_LANES  } from '../modules/nf-core/samtools/merge/main'
 include { GATK4_ADDORREPLACEREADGROUPS            } from '../modules/nf-core/gatk4/addorreplacereadgroups/main'
-include { BIOBAMBAM_BAMSORMADUP  } from '../modules/nf-core/biobambam/bamsormadup/main'
-include { SAMTOOLS_INDEX         } from '../modules/nf-core/samtools/index/main'
-include { MOSDEPTH               } from '../modules/nf-core/mosdepth/main'
-include { SAMTOOLS_FLAGSTAT      } from '../modules/nf-core/samtools/flagstat/main'
-include { GATK4_HAPLOTYPECALLER  } from '../modules/nf-core/gatk4/haplotypecaller/main'
-include { FREEBAYES              } from '../modules/nf-core/freebayes/main'
-include { BCFTOOLS_MPILEUP       } from '../modules/nf-core/bcftools/mpileup/main'
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap       } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_zfvarcall_pipeline'
+include { BIOBAMBAM_BAMSORMADUP          } from '../modules/nf-core/biobambam/bamsormadup/main'
+include { SAMTOOLS_INDEX                 } from '../modules/nf-core/samtools/index/main'
+include { MOSDEPTH                       } from '../modules/nf-core/mosdepth/main'
+include { SAMTOOLS_FLAGSTAT              } from '../modules/nf-core/samtools/flagstat/main'
+include { GATK4_HAPLOTYPECALLER          } from '../modules/nf-core/gatk4/haplotypecaller/main'
+include { BAM_FREEBAYES_SORT_INDEX_STATS } from '../subworkflows/local/bam_freebayes_sort_index_stats'
+include { BCFTOOLS_MPILEUP               } from '../modules/nf-core/bcftools/mpileup/main'
+include { MULTIQC                        } from '../modules/nf-core/multiqc/main'
+include { paramsSummaryMap               } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc           } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML         } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText         } from '../subworkflows/local/utils_nfcore_zfvarcall_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -186,19 +186,15 @@ workflow ZFVARCALL {
 
     // TODO: Use intervals
     //
-    // MODULE: freebayes
+    // SUBWORKFLOW: freebayes, VCF sort, index and stats
     //
-    ch_bam_bai_3 = SAMTOOLS_MERGE_LANES.out.bam.join(SAMTOOLS_INDEX.out.bai, failOnDuplicate: true, failOnMismatch: true)
-        .map{ meta, bam, bai -> [meta, bam, bai, [], [], []] }
-    FREEBAYES (
-        ch_bam_bai_3,
+    BAM_FREEBAYES_SORT_INDEX_STATS (
+        SAMTOOLS_MERGE_LANES.out.bam,
+        SAMTOOLS_INDEX.out.bai,
         ch_fasta,
-        ch_fasta_fai,
-        [[], []], // no need for samples file
-        [[], []], // no need for populations file
-        [[], []]  // no need for copy number map file
+        ch_fasta_fai
     )
-    ch_versions = ch_versions.mix(FREEBAYES.out.versions)
+    ch_versions = ch_versions.mix(BAM_FREEBAYES_SORT_INDEX_STATS.out.versions)
 
     // TODO: Use intervals
     //
