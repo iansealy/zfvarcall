@@ -16,6 +16,7 @@ include { SAMTOOLS_INDEX                 } from '../modules/nf-core/samtools/ind
 include { MOSDEPTH                       } from '../modules/nf-core/mosdepth/main'
 include { SAMTOOLS_FLAGSTAT              } from '../modules/nf-core/samtools/flagstat/main'
 include { GATK4_HAPLOTYPECALLER          } from '../modules/nf-core/gatk4/haplotypecaller/main'
+include { BCFTOOLS_STATS                 } from '../modules/nf-core/bcftools/stats/main'
 include { BAM_FREEBAYES_SORT_INDEX_STATS } from '../subworkflows/local/bam_freebayes_sort_index_stats'
 include { BCFTOOLS_MPILEUP               } from '../modules/nf-core/bcftools/mpileup/main'
 include { MULTIQC                        } from '../modules/nf-core/multiqc/main'
@@ -182,6 +183,21 @@ workflow ZFVARCALL {
         [[], []]  // no need for dbSNP index
     )
     ch_versions = ch_versions.mix(GATK4_HAPLOTYPECALLER.out.versions)
+
+    //
+    // MODULE: BCFtools stats
+    //
+    ch_vcf_tbi = GATK4_HAPLOTYPECALLER.out.vcf.join(GATK4_HAPLOTYPECALLER.out.tbi, failOnDuplicate: true, failOnMismatch: true)
+        .map{ meta, vcf, tbi -> [meta, vcf, tbi] }
+    BCFTOOLS_STATS (
+        ch_vcf_tbi,
+        [[], []], // no need for regions file
+        [[], []], // no need for targets file
+        [[], []], // no need for samples file
+        [[], []], // no need for exons file
+        [[], []]  // no need for fasta file
+    )
+    ch_versions = ch_versions.mix(BCFTOOLS_STATS.out.versions)
 
     //
     // SUBWORKFLOW: freebayes, VCF sort, index and stats
