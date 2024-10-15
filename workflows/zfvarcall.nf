@@ -4,9 +4,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { FASTP                          } from '../modules/nf-core/fastp/main'
-include { FASTQC                         } from '../modules/nf-core/fastqc/main'
-include { SEQKIT_SPLIT2                  } from '../modules/nf-core/seqkit/split2/main'
+include { FASTQ_FASTP_FASTQC_SPLIT       } from '../subworkflows/local/fastq_fastp_fastqc_split'
 include { BWA_MEM                        } from '../modules/nf-core/bwa/mem/main'
 include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_SPLITS } from '../modules/nf-core/samtools/merge/main'
 include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_LANES  } from '../modules/nf-core/samtools/merge/main'
@@ -46,45 +44,18 @@ workflow ZFVARCALL {
     ch_multiqc_files = Channel.empty()
 
     //
-    // MODULE: fastp
+    // SUBWORKFLOW: fastp, FastQC and SeqKit split2
     //
-    FASTP (
-        ch_samplesheet,
-        [],    // no need to specify adapters
-        false, // no need to discard passing reads
-        false, // no need to keep failed reads
-        false  // no need to merge reads
+    FASTQ_FASTP_FASTQC_SPLIT (
+        ch_samplesheet
     )
-    ch_reads_trimmed = FASTP.out.reads
-    ch_multiqc_files = ch_multiqc_files.mix(FASTP.out.json.collect{it[1]})
-    ch_multiqc_files = ch_multiqc_files.mix(FASTP.out.html.collect{it[1]})
-    ch_versions = ch_versions.mix(FASTP.out.versions)
-
-    //
-    // MODULE: FastQC
-    //
-    FASTQC (
-        ch_reads_trimmed
-    )
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
-    ch_versions = ch_versions.mix(FASTQC.out.versions)
-
-    //
-    // MODULE: SeqKit split2
-    //
-    SEQKIT_SPLIT2 (
-        ch_reads_trimmed
-    )
-    ch_reads_split = SEQKIT_SPLIT2.out.reads.transpose()
-        .map{ meta, read -> [meta + [split: get_split_num(read.getName())], read]}
-        .groupTuple()
-    ch_versions = ch_versions.mix(SEQKIT_SPLIT2.out.versions)
+    ch_versions = ch_versions.mix(FASTQ_FASTP_FASTQC_SPLIT.out.versions)
 
     //
     // MODULE: BWA mem
     //
     BWA_MEM (
-        ch_reads_split,
+        FASTQ_FASTP_FASTQC_SPLIT.out.reads,
         ch_bwa_index,
         ch_fasta,
         true // Sort BAM file
@@ -284,14 +255,6 @@ workflow ZFVARCALL {
     emit:multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
     versions       = ch_versions                 // channel: [ path(versions.yml) ]
 
-}
-
-// Helper functions
-
-// Extract split number from a read filename
-// e.g. Get "2" from "ERS01_1.fastp.part_002.fastq.gz"
-def get_split_num(String read) {
-    return (read =~ /(\d+)\.(fastq|fq)(\.gz)?$/)[0][1].toInteger()
 }
 
 /*
