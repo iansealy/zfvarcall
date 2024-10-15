@@ -19,6 +19,9 @@ workflow BAM_FREEBAYES_SORT_INDEX_STATS {
 
     ch_versions = Channel.empty()
 
+    //
+    // MODULE: freebayes
+    //
     ch_bam_bai = ch_bam.join(ch_bai, failOnDuplicate: true, failOnMismatch: true)
         .map{ meta, bam, bai -> [meta, bam, bai, [], [], []] }
     FREEBAYES (
@@ -31,16 +34,25 @@ workflow BAM_FREEBAYES_SORT_INDEX_STATS {
     )
     ch_versions = ch_versions.mix(FREEBAYES.out.versions)
 
+    //
+    // MODULE: BCFtools sort
+    //
     BCFTOOLS_SORT (
         FREEBAYES.out.vcf
     )
     ch_versions = ch_versions.mix(BCFTOOLS_SORT.out.versions)
 
+    //
+    // MODULE: tabix
+    //
     TABIX_TABIX (
         BCFTOOLS_SORT.out.vcf
     )
     ch_versions = ch_versions.mix(TABIX_TABIX.out.versions)
 
+    //
+    // MODULE: BCFtools stats
+    //
     ch_vcf_tbi = BCFTOOLS_SORT.out.vcf.join(TABIX_TABIX.out.tbi, failOnDuplicate: true, failOnMismatch: true)
         .map{ meta, vcf, tbi -> [meta, vcf, tbi] }
     BCFTOOLS_STATS (
