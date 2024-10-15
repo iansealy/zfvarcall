@@ -184,12 +184,6 @@ workflow ZFVARCALL {
     )
     ch_versions = ch_versions.mix(GATK4_HAPLOTYPECALLER.out.versions)
 
-    GATK4_HAPLOTYPECALLER_DUMMY (
-        SAMTOOLS_MERGE_LANES.out.bam,
-        SAMTOOLS_INDEX.out.bai,
-        GATK4_HAPLOTYPECALLER.out.vcf
-    )
-
     //
     // MODULE: BCFtools stats
     //
@@ -298,17 +292,6 @@ workflow ZFVARCALL {
 // e.g. Get "2" from "ERS01_1.fastp.part_002.fastq.gz"
 def get_split_num(String read) {
     return (read =~ /(\d+)\.(fastq|fq)(\.gz)?$/)[0][1].toInteger()
-}
-
-
-process GATK4_HAPLOTYPECALLER_DUMMY {
-    input:
-    tuple val(meta), path(bam)
-    tuple val(meta2), path(bai)
-    tuple val(meta3), path(vcf)
-
-    exec:
-    Thread.sleep(1);
 }
 
 /*
