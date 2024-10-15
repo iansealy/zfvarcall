@@ -51,7 +51,9 @@ workflow BAM_GATK4_HAPLOTYPECALLER_STATS {
     DUMMY (
         ch_bam,
         ch_bai,
-        GATK4_HAPLOTYPECALLER.out.vcf
+        GATK4_HAPLOTYPECALLER.out.vcf,
+        GATK4_HAPLOTYPECALLER.out.tbi,
+        BCFTOOLS_STATS.out.stats
     )
 
     emit:
@@ -68,6 +70,8 @@ process DUMMY {
     tuple val(meta), path(reads)
     tuple val(meta2), path(reads)
     tuple val(meta3), path(vcf)
+    tuple val(meta4), path(tbi)
+    tuple val(meta5), path(stats)
 
     exec:
     Thread.sleep(1);
