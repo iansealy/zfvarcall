@@ -4,24 +4,23 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { FASTQ_FASTP_FASTQC_SPLIT       } from '../subworkflows/local/fastq_fastp_fastqc_split'
-include { BWA_MEM                        } from '../modules/nf-core/bwa/mem/main'
+include { FASTQ_FASTP_FASTQC_SPLIT        } from '../subworkflows/local/fastq_fastp_fastqc_split'
+include { BWA_MEM                         } from '../modules/nf-core/bwa/mem/main'
 include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_SPLITS } from '../modules/nf-core/samtools/merge/main'
 include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_LANES  } from '../modules/nf-core/samtools/merge/main'
 include { GATK4_ADDORREPLACEREADGROUPS            } from '../modules/nf-core/gatk4/addorreplacereadgroups/main'
-include { BIOBAMBAM_BAMSORMADUP          } from '../modules/nf-core/biobambam/bamsormadup/main'
-include { SAMTOOLS_INDEX                 } from '../modules/nf-core/samtools/index/main'
-include { MOSDEPTH                       } from '../modules/nf-core/mosdepth/main'
-include { SAMTOOLS_FLAGSTAT              } from '../modules/nf-core/samtools/flagstat/main'
-include { GATK4_HAPLOTYPECALLER          } from '../modules/nf-core/gatk4/haplotypecaller/main'
-include { BCFTOOLS_STATS                 } from '../modules/nf-core/bcftools/stats/main'
-include { BAM_FREEBAYES_SORT_INDEX_STATS } from '../subworkflows/local/bam_freebayes_sort_index_stats'
-include { BCFTOOLS_MPILEUP               } from '../modules/nf-core/bcftools/mpileup/main'
-include { MULTIQC                        } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap               } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc           } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML         } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText         } from '../subworkflows/local/utils_nfcore_zfvarcall_pipeline'
+include { BIOBAMBAM_BAMSORMADUP           } from '../modules/nf-core/biobambam/bamsormadup/main'
+include { SAMTOOLS_INDEX                  } from '../modules/nf-core/samtools/index/main'
+include { MOSDEPTH                        } from '../modules/nf-core/mosdepth/main'
+include { SAMTOOLS_FLAGSTAT               } from '../modules/nf-core/samtools/flagstat/main'
+include { BAM_GATK4_HAPLOTYPECALLER_STATS } from '../subworkflows/local/bam_gatk4_haplotypecaller_stats'
+include { BAM_FREEBAYES_SORT_INDEX_STATS  } from '../subworkflows/local/bam_freebayes_sort_index_stats'
+include { BCFTOOLS_MPILEUP                } from '../modules/nf-core/bcftools/mpileup/main'
+include { MULTIQC                         } from '../modules/nf-core/multiqc/main'
+include { paramsSummaryMap                } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML          } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText          } from '../subworkflows/local/utils_nfcore_zfvarcall_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -141,34 +140,16 @@ workflow ZFVARCALL {
     ch_versions = ch_versions.mix(SAMTOOLS_FLAGSTAT.out.versions)
 
     //
-    // MODULE: GATK HaplotypeCaller
+    // SUBWORKFLOW: GATK HaplotypeCaller and BCFtools stats
     //
-    ch_bam_bai_2 = SAMTOOLS_MERGE_LANES.out.bam.join(SAMTOOLS_INDEX.out.bai, failOnDuplicate: true, failOnMismatch: true)
-        .map{ meta, bam, bai -> [meta, bam, bai, [], []] }
-    GATK4_HAPLOTYPECALLER (
-        ch_bam_bai_2,
+    BAM_GATK4_HAPLOTYPECALLER_STATS (
+        SAMTOOLS_MERGE_LANES.out.bam,
+        SAMTOOLS_INDEX.out.bai,
         ch_fasta,
         ch_fasta_fai,
-        ch_fasta_dict,
-        [[], []], // no need for dbSNP file
-        [[], []]  // no need for dbSNP index
+        ch_fasta_dict
     )
-    ch_versions = ch_versions.mix(GATK4_HAPLOTYPECALLER.out.versions)
-
-    //
-    // MODULE: BCFtools stats
-    //
-    ch_vcf_tbi = GATK4_HAPLOTYPECALLER.out.vcf.join(GATK4_HAPLOTYPECALLER.out.tbi, failOnDuplicate: true, failOnMismatch: true)
-        .map{ meta, vcf, tbi -> [meta, vcf, tbi] }
-    BCFTOOLS_STATS (
-        ch_vcf_tbi,
-        [[], []], // no need for regions file
-        [[], []], // no need for targets file
-        [[], []], // no need for samples file
-        [[], []], // no need for exons file
-        [[], []]  // no need for fasta file
-    )
-    ch_versions = ch_versions.mix(BCFTOOLS_STATS.out.versions)
+    ch_versions = ch_versions.mix(BAM_GATK4_HAPLOTYPECALLER_STATS.out.versions)
 
     //
     // SUBWORKFLOW: freebayes, VCF sort, index and stats
