@@ -31,6 +31,7 @@ workflow ZFVARCALL {
     ch_fasta_fai          // channel: [ val(meta), [ fai ] ]
     ch_fasta_dict         // channel: [ val(meta), [ dict ] ]
     ch_bwa_index          // channel: [ val(meta), [ bwa ] ]
+    ch_genome_bed         // channel: [ val(meta), [ bed ] ]
 
     main:
 

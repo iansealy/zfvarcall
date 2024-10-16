@@ -5,6 +5,7 @@
 include { SAMTOOLS_FAIDX                 } from '../../modules/nf-core/samtools/faidx/main'
 include { GATK4_CREATESEQUENCEDICTIONARY } from '../../modules/nf-core/gatk4/createsequencedictionary/main'
 include { BWA_INDEX                      } from '../../modules/nf-core/bwa/index/main'
+include { CHUNK_GENOME                   } from '../../modules/local/chunkgenome/main'
 
 workflow PREPARE_GENOME {
 
@@ -32,10 +33,18 @@ workflow PREPARE_GENOME {
         ch_fasta
     )
 
+    fasta_fai = fasta_fai   ? Channel.fromPath(fasta_fai).map{  it -> [ [id:'fai'],  it ] }.collect()
+                            : SAMTOOLS_FAIDX.out.fai
+
+    CHUNK_GENOME (
+        fasta_fai
+    )
+
     emit:
     fasta      = ch_fasta                                 // channel: [ val(meta), [ fasta ] ]
     fasta_fai  = SAMTOOLS_FAIDX.out.fai                   // channel: [ val(meta), [ fai ] ]
     fasta_dict = GATK4_CREATESEQUENCEDICTIONARY.out.dict  // channel: [ val(meta), [ dict ] ]
     bwa_index  = BWA_INDEX.out.index                      // channel: [ val(meta), [ bwa ] ]
+    genome_bed = CHUNK_GENOME.out.bed                     // channel: [ val(meta), [ bed ] ]
 }
 

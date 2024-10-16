@@ -59,7 +59,8 @@ workflow IANSEALY_ZFVARCALL {
         PREPARE_GENOME.out.fasta,
         fasta_fai,
         fasta_dict,
-        bwa_index
+        bwa_index,
+        PREPARE_GENOME.out.genome_bed
     )
     emit:
     multiqc_report = ZFVARCALL.out.multiqc_report // channel: /path/to/multiqc_report.html
