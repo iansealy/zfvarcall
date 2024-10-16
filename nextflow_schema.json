@@ -86,6 +86,13 @@
                     "default": 10000000,
                     "description": "Specify how many reads each split of a FASTQ file should contain.",
                     "fa_icon": "fas fa-hand-scissors"
+                },
+                "split_genome": {
+                    "type": "integer",
+                    "minimum": 100000,
+                    "default": 30000000,
+                    "description": "Specify the target number of base pairs each variant calling interval should contain.",
+                    "fa_icon": "fas fa-hand-scissors"
                 }
             }
         },
