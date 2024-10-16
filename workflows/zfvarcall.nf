@@ -43,6 +43,7 @@ workflow ZFVARCALL {
     FASTQ_FASTP_FASTQC_SPLIT (
         ch_samplesheet
     )
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTP_FASTQC_SPLIT.out.multiqc.collect{it[1]})
     ch_versions = ch_versions.mix(FASTQ_FASTP_FASTQC_SPLIT.out.versions)
 
     //
