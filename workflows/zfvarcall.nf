@@ -5,12 +5,7 @@
 */
 
 include { FASTQ_FASTP_FASTQC_SPLIT        } from '../subworkflows/local/fastq_fastp_fastqc_split'
-include { BWA_MEM                         } from '../modules/nf-core/bwa/mem/main'
-include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_SPLITS } from '../modules/nf-core/samtools/merge/main'
-include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_LANES  } from '../modules/nf-core/samtools/merge/main'
-include { GATK4_ADDORREPLACEREADGROUPS            } from '../modules/nf-core/gatk4/addorreplacereadgroups/main'
-include { BIOBAMBAM_BAMSORMADUP           } from '../modules/nf-core/biobambam/bamsormadup/main'
-include { SAMTOOLS_INDEX                  } from '../modules/nf-core/samtools/index/main'
+include { FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX } from '../subworkflows/local/fastq_align_bwa_merge_addrg_markdup_merge_index'
 include { MOSDEPTH                        } from '../modules/nf-core/mosdepth/main'
 include { SAMTOOLS_FLAGSTAT               } from '../modules/nf-core/samtools/flagstat/main'
 include { BAM_GATK4_HAPLOTYPECALLER_STATS } from '../subworkflows/local/bam_gatk4_haplotypecaller_stats'
@@ -51,74 +46,22 @@ workflow ZFVARCALL {
     ch_versions = ch_versions.mix(FASTQ_FASTP_FASTQC_SPLIT.out.versions)
 
     //
-    // MODULE: BWA mem
+    // SUBWORKFLOW: BWA mem, Samtools merge (splits), GATK AddOrReplaceReadGroups,
+    // biobambam2 bamsormadup, Samtools merge (lanes) and Samtools index
     //
-    BWA_MEM (
+    FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX (
         FASTQ_FASTP_FASTQC_SPLIT.out.reads,
         ch_bwa_index,
         ch_fasta,
-        true // Sort BAM file
-    )
-    ch_versions = ch_versions.mix(BWA_MEM.out.versions)
-
-    //
-    // MODULE: Samtools merge (splits)
-    //
-    ch_bam_split = BWA_MEM.out.bam
-        .map { it[0].remove("split"); it }
-        .groupTuple()
-    SAMTOOLS_MERGE_SPLITS (
-        ch_bam_split,
-        ch_fasta,
         ch_fasta_fai
     )
-    ch_versions = ch_versions.mix(SAMTOOLS_MERGE_SPLITS.out.versions)
-
-    //
-    // MODULE: GATK AddOrReplaceReadGroups
-    //
-    GATK4_ADDORREPLACEREADGROUPS (
-        SAMTOOLS_MERGE_SPLITS.out.bam,
-        ch_fasta,
-        ch_fasta_fai
-    )
-    ch_versions = ch_versions.mix(GATK4_ADDORREPLACEREADGROUPS.out.versions)
-
-    //
-    // MODULE: biobambam2 bamsormadup
-    //
-    BIOBAMBAM_BAMSORMADUP (
-        GATK4_ADDORREPLACEREADGROUPS.out.bam,
-        ch_fasta
-    )
-    ch_multiqc_files = ch_multiqc_files.mix(BIOBAMBAM_BAMSORMADUP.out.metrics.collect{it[1]})
-    ch_versions = ch_versions.mix(BIOBAMBAM_BAMSORMADUP.out.versions)
-
-    //
-    // MODULE: Samtools merge (lanes)
-    //
-    ch_bam_lanes = BIOBAMBAM_BAMSORMADUP.out.bam
-        .map { it[0].remove("lane"); it[0].id = it[0].sample; it }
-        .groupTuple()
-    SAMTOOLS_MERGE_LANES (
-        ch_bam_lanes,
-        ch_fasta,
-        ch_fasta_fai
-    )
-    ch_versions = ch_versions.mix(SAMTOOLS_MERGE_LANES.out.versions)
-
-    //
-    // MODULE: Samtools index
-    //
-    SAMTOOLS_INDEX (
-        SAMTOOLS_MERGE_LANES.out.bam
-    )
-    ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions)
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX.out.multiqc.collect{it[1]})
+    ch_versions = ch_versions.mix(FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX.out.versions)
 
     //
     // MODULE: mosdepth
     //
-    ch_bam_bai_1 = SAMTOOLS_MERGE_LANES.out.bam.join(SAMTOOLS_INDEX.out.bai, failOnDuplicate: true, failOnMismatch: true)
+    ch_bam_bai_1 = FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX.out.bam.join(FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX.out.bai, failOnDuplicate: true, failOnMismatch: true)
         .map{ meta, bam, bai -> [meta, bam, bai, []] }
     MOSDEPTH (
         ch_bam_bai_1,
@@ -131,7 +74,7 @@ workflow ZFVARCALL {
     //
     // MODULE: Samtools flagstat
     //
-    ch_bam_bai_0 = SAMTOOLS_MERGE_LANES.out.bam.join(SAMTOOLS_INDEX.out.bai, failOnDuplicate: true, failOnMismatch: true)
+    ch_bam_bai_0 = FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX.out.bam.join(FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX.out.bai, failOnDuplicate: true, failOnMismatch: true)
         .map{ meta, bam, bai -> [meta, bam, bai] }
     SAMTOOLS_FLAGSTAT (
         ch_bam_bai_0
@@ -143,8 +86,8 @@ workflow ZFVARCALL {
     // SUBWORKFLOW: GATK HaplotypeCaller and BCFtools stats
     //
     BAM_GATK4_HAPLOTYPECALLER_STATS (
-        SAMTOOLS_MERGE_LANES.out.bam,
-        SAMTOOLS_INDEX.out.bai,
+        FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX.out.bam,
+        FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX.out.bai,
         ch_fasta,
         ch_fasta_fai,
         ch_fasta_dict
@@ -155,8 +98,8 @@ workflow ZFVARCALL {
     // SUBWORKFLOW: freebayes, VCF sort, index and stats
     //
     BAM_FREEBAYES_SORT_INDEX_STATS (
-        SAMTOOLS_MERGE_LANES.out.bam,
-        SAMTOOLS_INDEX.out.bai,
+        FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX.out.bam,
+        FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX.out.bai,
         ch_fasta,
         ch_fasta_fai
     )
@@ -165,7 +108,7 @@ workflow ZFVARCALL {
     //
     // MODULE: BCFtools mpileup
     //
-    ch_bam_1 = SAMTOOLS_MERGE_LANES.out.bam.map{ meta, bam -> [meta, bam, []] }
+    ch_bam_1 = FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX.out.bam.map{ meta, bam -> [meta, bam, []] }
     BCFTOOLS_MPILEUP (
         ch_bam_1,
         ch_fasta,
