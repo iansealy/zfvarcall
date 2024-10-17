@@ -67,8 +67,8 @@ workflow BAM_GATK4_HAPLOTYPECALLER_STATS {
 // Prevent nf-boost cleanup from prematurely deleting BAM files and indices
 process DUMMY {
     input:
-    tuple val(meta), path(reads)
-    tuple val(meta2), path(reads)
+    tuple val(meta), path(bam)
+    tuple val(meta2), path(bai)
     tuple val(meta3), path(vcf)
     tuple val(meta4), path(tbi)
     tuple val(meta5), path(stats)
