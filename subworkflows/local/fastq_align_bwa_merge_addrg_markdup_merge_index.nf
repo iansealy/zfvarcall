@@ -57,7 +57,7 @@ workflow FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX {
     )
     ch_versions = ch_versions.mix(GATK4_ADDORREPLACEREADGROUPS.out.versions)
 
-    DUMMY (
+    DUMMY1 (
         SAMTOOLS_MERGE_SPLITS.out.bam,
         GATK4_ADDORREPLACEREADGROUPS.out.bam
     )
@@ -71,6 +71,11 @@ workflow FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX {
     )
     ch_multiqc_files = ch_multiqc_files.mix(BIOBAMBAM_BAMSORMADUP.out.metrics.collect{it[1]})
     ch_versions = ch_versions.mix(BIOBAMBAM_BAMSORMADUP.out.versions)
+
+    DUMMY2 (
+        GATK4_ADDORREPLACEREADGROUPS.out.bam,
+        BIOBAMBAM_BAMSORMADUP.out.bam
+    )
 
     //
     // MODULE: Samtools merge (lanes)
@@ -104,7 +109,15 @@ workflow FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX {
 // Dummy process
 
 // Prevent nf-boost cleanup from prematurely deleting BAM files
-process DUMMY {
+process DUMMY1 {
+    input:
+    tuple val(meta), path(bam)
+    tuple val(meta2), path(bam)
+
+    exec:
+    Thread.sleep(1);
+}
+process DUMMY2 {
     input:
     tuple val(meta), path(bam)
     tuple val(meta2), path(bam)
