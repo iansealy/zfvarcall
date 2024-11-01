@@ -39,12 +39,13 @@ workflow PREPARE_GENOME {
     CHUNK_GENOME (
         fasta_fai
     )
+    ch_genome_bed = CHUNK_GENOME.out.bed.flatten().map(){ it -> [ [order:it.baseName.toInteger()], it ] }
 
     emit:
     fasta      = ch_fasta                                 // channel: [ val(meta), [ fasta ] ]
     fasta_fai  = SAMTOOLS_FAIDX.out.fai                   // channel: [ val(meta), [ fai ] ]
     fasta_dict = GATK4_CREATESEQUENCEDICTIONARY.out.dict  // channel: [ val(meta), [ dict ] ]
     bwa_index  = BWA_INDEX.out.index                      // channel: [ val(meta), [ bwa ] ]
-    genome_bed = CHUNK_GENOME.out.bed                     // channel: [ val(meta), [ bed ] ]
+    genome_bed = ch_genome_bed                            // channel: [ val(meta), [ bed ] ]
 }
 
