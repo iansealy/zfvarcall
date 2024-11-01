@@ -10,7 +10,7 @@ include { MOSDEPTH                        } from '../modules/nf-core/mosdepth/ma
 include { SAMTOOLS_FLAGSTAT               } from '../modules/nf-core/samtools/flagstat/main'
 include { BAM_GATK4_HAPLOTYPECALLER_STATS } from '../subworkflows/local/bam_gatk4_haplotypecaller_stats'
 include { BAM_FREEBAYES_SORT_INDEX_STATS  } from '../subworkflows/local/bam_freebayes_sort_index_stats'
-include { BCFTOOLS_MPILEUP                } from '../modules/nf-core/bcftools/mpileup/main'
+include { BAM_BCFTOOLS_MPILEUP_STATS      } from '../subworkflows/local/bam_bcftools_mpileup_stats'
 include { MULTIQC                         } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap                } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -110,15 +110,14 @@ workflow ZFVARCALL {
     ch_versions = ch_versions.mix(BAM_FREEBAYES_SORT_INDEX_STATS.out.versions)
 
     //
-    // MODULE: BCFtools mpileup
+    // SUBWORKFLOW: BCFtools mpileup and stats
     //
-    ch_bam_1 = FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX.out.bam.map{ meta, bam -> [meta, bam, []] }
-    BCFTOOLS_MPILEUP (
-        ch_bam_1,
+    BAM_BCFTOOLS_MPILEUP_STATS (
+        FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX.out.bam,
         ch_fasta,
-        false // no need to save mpileup
+        ch_genome_bed
     )
-    ch_versions = ch_versions.mix(BCFTOOLS_MPILEUP.out.versions)
+    ch_versions = ch_versions.mix(BAM_BCFTOOLS_MPILEUP_STATS.out.versions)
 
     //
     // Collate and save software versions
