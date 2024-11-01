@@ -3,16 +3,18 @@
 //
 
 include { GATK4_HAPLOTYPECALLER } from '../../modules/nf-core/gatk4/haplotypecaller/main'
+include { BCFTOOLS_CONCAT       } from '../../modules/nf-core/bcftools/concat/main'
 include { BCFTOOLS_STATS        } from '../../modules/nf-core/bcftools/stats/main'
 
 workflow BAM_GATK4_HAPLOTYPECALLER_STATS {
 
     take:
-    ch_bam        // channel: [ val(meta), [ bam ] ]
-    ch_bai        // channel: [ val(meta), [ bai ] ]
-    ch_fasta      // channel: [ val(meta), [ fasta ] ]
-    ch_fasta_fai  // channel: [ val(meta), [ fai ] ]
-    ch_fasta_dict // channel: [ val(meta), [ dict ] ]
+    ch_bam         // channel: [ val(meta), [ bam ] ]
+    ch_bai         // channel: [ val(meta), [ bai ] ]
+    ch_fasta       // channel: [ val(meta), [ fasta ] ]
+    ch_fasta_fai   // channel: [ val(meta), [ fai ] ]
+    ch_fasta_dict  // channel: [ val(meta), [ dict ] ]
+    ch_genome_bed  // channel: [ val(meta), [ bed ] ]
 
     main:
 
@@ -21,10 +23,11 @@ workflow BAM_GATK4_HAPLOTYPECALLER_STATS {
     //
     // MODULE: GATK HaplotypeCaller
     //
-    ch_bam_bai_2 = ch_bam.join(ch_bai, failOnDuplicate: true, failOnMismatch: true)
-        .map{ meta, bam, bai -> [meta, bam, bai, [], []] }
+    ch_bam_bai_bed_1 = ch_bam.join(ch_bai, failOnDuplicate: true, failOnMismatch: true)
+        .combine(ch_genome_bed)
+        .map{ meta, bam, bai, meta2, bed -> [meta + meta2, bam, bai, bed, []] }
     GATK4_HAPLOTYPECALLER (
-        ch_bam_bai_2,
+        ch_bam_bai_bed_1,
         ch_fasta,
         ch_fasta_fai,
         ch_fasta_dict,
@@ -34,9 +37,21 @@ workflow BAM_GATK4_HAPLOTYPECALLER_STATS {
     ch_versions = ch_versions.mix(GATK4_HAPLOTYPECALLER.out.versions)
 
     //
+    // MODULE: BCFtools concat
+    //
+    ch_vcfs_tbis = GATK4_HAPLOTYPECALLER.out.vcf.map{ meta, vcf -> [meta, vcf, meta.order] }
+        .map { it[0].remove("order"); it }
+        .groupTuple()
+        .map{ meta, vcfs, order -> [meta, order.withIndex().sort().collect { vcfs[it[1]] }, []] }
+    BCFTOOLS_CONCAT (
+        ch_vcfs_tbis
+    )
+    ch_versions = ch_versions.mix(BCFTOOLS_CONCAT.out.versions)
+
+    //
     // MODULE: BCFtools stats
     //
-    ch_vcf_tbi = GATK4_HAPLOTYPECALLER.out.vcf.join(GATK4_HAPLOTYPECALLER.out.tbi, failOnDuplicate: true, failOnMismatch: true)
+    ch_vcf_tbi = BCFTOOLS_CONCAT.out.vcf.join(BCFTOOLS_CONCAT.out.tbi, failOnDuplicate: true, failOnMismatch: true)
         .map{ meta, vcf, tbi -> [meta, vcf, tbi] }
     BCFTOOLS_STATS (
         ch_vcf_tbi,
@@ -57,7 +72,7 @@ workflow BAM_GATK4_HAPLOTYPECALLER_STATS {
     )
 
     emit:
-    vcf      = GATK4_HAPLOTYPECALLER.out.vcf   // channel: [ val(meta), [ vcf ] ]
+    vcf      = BCFTOOLS_CONCAT.out.vcf         // channel: [ val(meta), [ vcf ] ]
 
     versions = ch_versions                     // channel: [ versions.yml ]
 }

@@ -92,7 +92,8 @@ workflow ZFVARCALL {
         FASTQ_ALIGN_BWA_MERGE_ADDRG_MARKDUP_MERGE_INDEX.out.bai,
         ch_fasta,
         ch_fasta_fai,
-        ch_fasta_dict
+        ch_fasta_dict,
+        ch_genome_bed
     )
     ch_versions = ch_versions.mix(BAM_GATK4_HAPLOTYPECALLER_STATS.out.versions)
 
