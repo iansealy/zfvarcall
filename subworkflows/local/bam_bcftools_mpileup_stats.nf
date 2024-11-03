@@ -56,9 +56,29 @@ workflow BAM_BCFTOOLS_MPILEUP_STATS {
     )
     ch_versions = ch_versions.mix(BCFTOOLS_STATS.out.versions)
 
+    DUMMY (
+        ch_bam,
+        BCFTOOLS_MPILEUP.out.vcf,
+        BCFTOOLS_MPILEUP.out.tbi,
+        BCFTOOLS_STATS.out.stats
+    )
+
     emit:
     vcf      = BCFTOOLS_CONCAT.out.vcf           // channel: [ val(meta), [ vcf ] ]
 
     versions = ch_versions                     // channel: [ versions.yml ]
 }
 
+// Dummy process
+
+// Prevent nf-boost cleanup from prematurely deleting BAM and VCF files
+process DUMMY {
+    input:
+    tuple val(meta), path(bam)
+    tuple val(meta2), path(vcf)
+    tuple val(meta3), path(tbi)
+    tuple val(meta4), path(stats)
+
+    exec:
+    Thread.sleep(1);
+}
