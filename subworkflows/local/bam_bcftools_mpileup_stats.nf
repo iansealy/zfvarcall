@@ -58,8 +58,8 @@ workflow BAM_BCFTOOLS_MPILEUP_STATS {
 
     DUMMY (
         ch_bam,
-        BCFTOOLS_MPILEUP.out.vcf,
-        BCFTOOLS_MPILEUP.out.tbi,
+        BCFTOOLS_CONCAT.out.vcf,
+        BCFTOOLS_CONCAT.out.tbi,
         BCFTOOLS_STATS.out.stats
     )
 

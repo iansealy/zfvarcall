@@ -66,8 +66,8 @@ workflow BAM_GATK4_HAPLOTYPECALLER_STATS {
     DUMMY (
         ch_bam,
         ch_bai,
-        GATK4_HAPLOTYPECALLER.out.vcf,
-        GATK4_HAPLOTYPECALLER.out.tbi,
+        BCFTOOLS_CONCAT.out.vcf,
+        BCFTOOLS_CONCAT.out.tbi,
         BCFTOOLS_STATS.out.stats
     )
 
