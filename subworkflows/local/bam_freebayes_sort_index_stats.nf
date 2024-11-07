@@ -44,6 +44,11 @@ workflow BAM_FREEBAYES_SORT_INDEX_STATS {
     )
     ch_versions = ch_versions.mix(BCFTOOLS_SORT.out.versions)
 
+    DUMMY1 (
+        FREEBAYES.out.vcf,
+        BCFTOOLS_SORT.out.vcf
+    )
+
     //
     // MODULE: BCFtools concat
     //
@@ -71,7 +76,7 @@ workflow BAM_FREEBAYES_SORT_INDEX_STATS {
     )
     ch_versions = ch_versions.mix(BCFTOOLS_STATS.out.versions)
 
-    DUMMY (
+    DUMMY2 (
         ch_bam,
         ch_bai,
         BCFTOOLS_CONCAT.out.vcf,
@@ -89,7 +94,15 @@ workflow BAM_FREEBAYES_SORT_INDEX_STATS {
 // Dummy process
 
 // Prevent nf-boost cleanup from prematurely deleting BAM and VCF files
-process DUMMY {
+process DUMMY1 {
+    input:
+    tuple val(meta), path(vcf)
+    tuple val(meta2), path(vcf)
+
+    exec:
+    Thread.sleep(1);
+}
+process DUMMY2 {
     input:
     tuple val(meta), path(bam)
     tuple val(meta2), path(bai)
