@@ -4,6 +4,7 @@
 
 include { GATK4_HAPLOTYPECALLER } from '../../modules/nf-core/gatk4/haplotypecaller/main'
 include { BCFTOOLS_CONCAT       } from '../../modules/nf-core/bcftools/concat/main'
+include { BCFTOOLS_INDEX        } from '../../modules/nf-core/bcftools/index/main'
 include { BCFTOOLS_STATS        } from '../../modules/nf-core/bcftools/stats/main'
 
 workflow BAM_GATK4_HAPLOTYPECALLER_STATS {
@@ -49,9 +50,17 @@ workflow BAM_GATK4_HAPLOTYPECALLER_STATS {
     ch_versions = ch_versions.mix(BCFTOOLS_CONCAT.out.versions)
 
     //
+    // MODULE: BCFtools index
+    //
+    BCFTOOLS_INDEX (
+        BCFTOOLS_CONCAT.out.vcf
+    )
+    ch_versions = ch_versions.mix(BCFTOOLS_INDEX.out.versions)
+
+    //
     // MODULE: BCFtools stats
     //
-    ch_vcf_tbi = BCFTOOLS_CONCAT.out.vcf.join(BCFTOOLS_CONCAT.out.tbi, failOnDuplicate: true, failOnMismatch: true)
+    ch_vcf_tbi = BCFTOOLS_CONCAT.out.vcf.join(BCFTOOLS_INDEX.out.tbi, failOnDuplicate: true, failOnMismatch: true)
         .map{ meta, vcf, tbi -> [meta, vcf, tbi] }
     BCFTOOLS_STATS (
         ch_vcf_tbi,
@@ -67,7 +76,7 @@ workflow BAM_GATK4_HAPLOTYPECALLER_STATS {
         ch_bam,
         ch_bai,
         BCFTOOLS_CONCAT.out.vcf,
-        BCFTOOLS_CONCAT.out.tbi,
+        BCFTOOLS_INDEX.out.tbi,
         BCFTOOLS_STATS.out.stats
     )
 
